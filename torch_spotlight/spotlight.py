@@ -29,7 +29,7 @@ def md_adversary_weights(mean, precision, x, losses, counts=None):
 #     weights_unnorm = gaussian_probs(mean, precision, x)
     weights_unnorm = squared_distance_kernel(mean, precision, x)
     total_weight = weights_unnorm @ counts
-    weights = weights_unnorm / total_weight
+    weights = weights_unnorm / (total_weight + 1e-8)
     weighted_loss = (weights * counts) @ losses
     
     return (weights, weights_unnorm, weighted_loss, total_weight)
@@ -101,8 +101,9 @@ def run_spotlight(
     predictions=None, 
     prediction_coeff=0.0,
 ):
-    x = torch.tensor(embeddings, device=device)
-    y = torch.tensor(losses, device=device)
+    
+    x = embeddings.clone().detach().to(device)
+    y = losses.clone().detach().to(device)
     dimensions = x.shape[1]
 
     mean = torch.zeros((dimensions,), requires_grad=True, device=device)
